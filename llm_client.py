@@ -17,7 +17,7 @@ client = OpenAI(
 def ask_llm(prompt):
 
     response = client.chat.completions.create(
-        model="YOUR_MODEL_HERE",
+        model="openrouter/free",
         messages=[
             {
                 "role": "user",

@@ -1,0 +1,41 @@
+from llm_client import ask_llm
+
+
+def generate_code(problem):
+
+    prompt = f"""
+You are a Python code generation agent.
+
+Your task is to solve the given programming problem.
+
+Generate a correct Python implementation for the problem.
+
+Requirements:
+- Write a correct Python function that solves the problem.
+- Use clear and readable Python code.
+- Preserve necessary conditional logic required by the problem.
+- Do not replace meaningful algorithmic logic with shortcuts from built-in functions when doing so removes important decision logic.
+- Do not intentionally add unnecessary branches.
+- Do not provide explanations.
+- Do not use Markdown code fences.
+- Return only raw Python source code.
+- The first character of your response must be part of the Python code.
+- The generated code must be directly executable when saved as a .py file.
+
+Problem:
+{problem}
+"""
+
+    return ask_llm(prompt)
+
+
+if __name__ == "__main__":
+
+    problem = """
+Write a function that takes a list of integers
+and returns the largest element in the list.
+"""
+
+    code = generate_code(problem)
+
+    print(code)
