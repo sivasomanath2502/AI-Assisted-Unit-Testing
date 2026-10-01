@@ -1,0 +1,32 @@
+{
+    "task_id": 15,
+    "function_name": "split_lowerstring",
+    "code": "def split_lowerstring(s):\n    result = []\n    current = []\n    for ch in s:\n        if 'a' <= ch <= 'z':\n            result.append(''.join(current))\n            current = []\n        else:\n            current.append(ch)\n    result.append(''.join(current))\n    return result",
+    "tests": "from solution import split_lowerstring\n\ndef test_split_at_lowercase():\n    assert split_lowerstring(\"AbCd\") == [\"bC\", \"d\"]\n\ndef test_all_lowercase():\n    assert split_lowerstring(\"Python\") == [\"y\", \"t\", \"h\", \"o\", \"n\"]\n\ndef test_all_lowercase_long():\n    assert split_lowerstring(\"Programming\") == [\"r\", \"o\", \"g\", \"r\", \"a\", \"m\", \"m\", \"i\", \"n\", \"g\"]\n\ndef test_empty_string():\n    assert split_lowerstring(\"\") == [\"\"]\n\ndef test_all_uppercase():\n    assert split_lowerstring(\"ABC\") == [\"\", \"\", \"\", \"\"]\n\ndef test_single_lowercase():\n    assert split_lowerstring(\"a\") == [\"\", \"\"]\n\ndef test_single_uppercase():\n    assert split_lowerstring(\"A\") == [\"A\"]\n\ndef test_mixed_case():\n    assert split_lowerstring(\"AbC\") == [\"b\", \"\"]\n\ndef test_consecutive_lowercase():\n    assert split_lowerstring(\"abc\") == [\"\", \"\", \"\", \"\"]\n\ndef test_consecutive_uppercase():\n    assert split_lowerstring(\"ABC\") == [\"\", \"\", \"\", \"\"]\n\ndef test_uppercase_lowercase():\n    assert split_lowerstring(\"Aa\") == [\"a\", \"\"]\n\ndef test_lowercase_uppercase():\n    assert split_lowerstring(\"aA\") == [\"\", \"A\"]\n\ndef test_numbers():\n    assert split_lowerstring(\"a1b\") == [\"\", \"1\", \"\"]\n\ndef test_special_chars():\n    assert split_lowerstring(\"a!b\") == [\"\", \"!\", \"\"]\n\ndef test_whitespace():\n    assert split_lowerstring(\"a b\") == [\"\", \" \", \"\"]\n\ndef test_numbers_uppercase():\n    assert split_lowerstring(\"1A2B\") == [\"1\", \"2\", \"\"]\n\ndef test_mixed_alphanumeric():\n    assert split_lowerstring(\"A1bC2\") == [\"1\", \"2\", \"\"]\n\ndef test_longer_string():\n    assert split_lowerstring(\"HelloWorld\") == [\"ello\", \"orld\", \"\"]\n\ndef test_all_lowercase_mixed():\n    assert split_lowerstring(\"hELLO\") == [\"\", \"E\", \"L\", \"L\", \"O\", \"\"]\n\ndef test_uppercase_lowercase_uppercase():\n    assert split_lowerstring(\"AaA\") == [\"a\", \"\"]",
+    "reference": {
+        "passed": false,
+        "return_code": 1,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"C:\\Users\\SIVA SOMANATH\\AppData\\Local\\Temp\\tmp6znabbxd\\reference_test.py\", line 3, in <module>\n    assert split_lowerstring(\"AbCd\")==[\"bC\",\"d\"]\nAssertionError\n"
+    },
+    "review": {
+        "verdict": "REJECT",
+        "response": "VERDICT: REJECT\nREASONS:\n- Many test assertions expect values that contradict the problem specification and reference examples (e.g., \"ABC\" → [\"\",\"\",\"\",\"\"], \"a\" → [\"\",\"\"], \"AbC\" → [\"b\",\"\"]).\n- The suite includes redundant tests (e.g., test_all_uppercase and test_consecutive_uppercase) that add little new coverage.\n- Several tests assert incorrect behavior for strings lacking lowercase letters, showing the oracles are based on an incorrect implementation rather than the spec.\n- Edge‑case expectations (empty string, single characters) are questionable and do not clearly reflect the intended “split at lowercase letters” behavior.",
+        "approved": false,
+        "attempts": 1
+    },
+    "review_status": "FAILED",
+    "result": {
+        "tests_passed": 8,
+        "tests_failed": 12,
+        "test_errors": 0,
+        "branch_covered": 4,
+        "branch_total": 4,
+        "branch_coverage": 100.0,
+        "test_execution": "FAIL"
+    },
+    "artifacts": {
+        "solution_file": "generated\\problem_15\\solution.py",
+        "test_file": "generated\\problem_15\\test_generated.py"
+    }
+}

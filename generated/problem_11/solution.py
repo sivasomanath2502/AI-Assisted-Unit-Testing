@@ -1,8 +1,17 @@
-def remove_Occ(s, char):
-    first_idx = s.find(char)
-    if first_idx == -1:
-        return s
-    last_idx = s.rfind(char)
-    if first_idx == last_idx:
-        return s[:first_idx] + s[first_idx+1:]
-    return s[:first_idx] + s[first_idx+1:last_idx] + s[last_idx+1:]
+def remove_Occ(string, char):
+    if not char:
+        return string
+    
+    first = string.find(char)
+    if first == -1:
+        return string
+    
+    last = string.rfind(char)
+    
+    result = []
+    for i, c in enumerate(string):
+        if c == char and (i == first or i == last):
+            continue
+        result.append(c)
+    
+    return ''.join(result)

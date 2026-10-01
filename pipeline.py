@@ -1,36 +1,45 @@
 from agents.code_generator import generate_code
 from agents.test_generator import generate_tests
+from agents.review_agent import review_tests
 from agents.test_executor import (
     execute_tests,
     parse_results,
 )
+
 from dataset_loader import load_dataset
+
 from reference_evaluator import (
     evaluate_generated_code,
 )
+
 from utils.dataset_contract import (
     infer_contract,
 )
-from utils.persistence import save_generated_artifacts
+
+from utils.persistence import (
+    save_generated_artifacts,
+)
+
 from utils.results_writer import (
     save_problem_result,
     save_all_results,
 )
+
 
 def run_pipeline(problem_data):
 
     task_id = problem_data["task_id"]
     problem = problem_data["text"]
 
-    contract = infer_contract(
-        problem_data
-    )
+    contract = infer_contract(problem_data)
 
     print("=" * 60)
-    print(
-        f"PROCESSING PROBLEM {task_id}"
-    )
+    print(f"PROCESSING PROBLEM {task_id}")
     print("=" * 60)
+
+    # --------------------------------------------------
+    # Dataset Contract
+    # --------------------------------------------------
 
     print("\n[Dataset Contract]")
 
@@ -50,12 +59,10 @@ def run_pipeline(problem_data):
     )
 
     # --------------------------------------------------
-    # Agent 1
+    # Agent 1 — Code Generator
     # --------------------------------------------------
 
-    print(
-        "\n[Agent 1] Generating code..."
-    )
+    print("\n[Agent 1] Generating code...")
 
     try:
 
@@ -69,22 +76,24 @@ def run_pipeline(problem_data):
         print(f"\n{error}")
 
         return {
-        "task_id": task_id,
-        "function_name": contract["function_name"],
-        "code": None,
-        "tests": None,
-        "reference": None,
-        "result": {
-            "tests_passed": 0,
-            "tests_failed": 0,
-            "test_errors": 0,
-            "branch_covered": 0,
-            "branch_total": 0,
-            "branch_coverage": None,
-            "verdict": "CODE_GENERATION_FAILED",
-        },
-        "artifacts": None,
-    }
+            "task_id": task_id,
+            "function_name": contract["function_name"],
+            "code": None,
+            "tests": None,
+            "reference": None,
+            "review": None,
+            "review_status": "NOT_RUN",
+            "result": {
+                "tests_passed": 0,
+                "tests_failed": 0,
+                "test_errors": 0,
+                "branch_covered": 0,
+                "branch_total": 0,
+                "branch_coverage": None,
+                "test_execution": "CODE_GENERATION_FAILED",
+            },
+            "artifacts": None,
+        }
 
     print("\nGenerated Code:")
     print(code)
@@ -119,46 +128,157 @@ def run_pipeline(problem_data):
         print(reference["stderr"])
 
     # --------------------------------------------------
-    # Agent 2
+    # Agent 2 — Test Generator
     # --------------------------------------------------
 
     print("\n[Agent 2] Generating tests...")
 
-    reference_tests = problem_data.get("test_list", [])
+    reference_tests = problem_data.get(
+        "test_list",
+        [],
+    )
 
     try:
+
         tests = generate_tests(
             problem=problem,
             code=code,
             function_name=contract["function_name"],
             reference_tests=reference_tests,
         )
+
     except Exception as error:
 
         print(f"\n{error}")
 
         return {
-        "task_id": task_id,
-        "function_name": contract["function_name"],
-        "code": code,
-        "tests": None,
-        "reference": reference,
-        "result": {
-            "tests_passed": 0,
-            "tests_failed": 0,
-            "test_errors": 0,
-            "branch_covered": 0,
-            "branch_total": 0,
-            "branch_coverage": None,
-            "verdict": "TEST_GENERATION_FAILED",
-        },
-        "artifacts": None,
-    }
+            "task_id": task_id,
+            "function_name": contract["function_name"],
+            "code": code,
+            "tests": None,
+            "reference": reference,
+            "review": None,
+            "review_status": "NOT_RUN",
+            "result": {
+                "tests_passed": 0,
+                "tests_failed": 0,
+                "test_errors": 0,
+                "branch_covered": 0,
+                "branch_total": 0,
+                "branch_coverage": None,
+                "test_execution": "TEST_GENERATION_FAILED",
+            },
+            "artifacts": None,
+        }
 
     print("\nGenerated Tests:")
     print(tests)
 
-    print("\n[Persistence] Saving generated artifacts...")
+    # --------------------------------------------------
+    # Agent 3 — Review Agent
+    # --------------------------------------------------
+
+    print(
+        "\n[Agent 3] Reviewing generated tests..."
+    )
+
+    review = None
+    review_status = "NOT_RUN"
+
+    try:
+
+        review = review_tests(
+            problem=problem,
+            code=code,
+            function_name=contract["function_name"],
+            reference_tests=reference_tests,
+            tests=tests,
+        )
+
+        review_status = review["verdict"]
+
+        print("\nReview Verdict:")
+        print(review["verdict"])
+
+        print("\nReview Details:")
+        print(review["response"])
+
+    except Exception as error:
+
+        review_status = "FAILED"
+
+        print(
+            f"\nReview Agent failed: {error}"
+        )
+
+    # --------------------------------------------------
+    # One-Time Test Regeneration
+    # --------------------------------------------------
+
+    if (
+        review is not None
+        and review["verdict"] == "REJECT"
+    ):
+
+        print(
+            "\n[Agent 3] Review rejected "
+            "the generated tests."
+        )
+
+        print(
+            "[Agent 2] Regenerating tests once..."
+        )
+
+        try:
+
+            tests = generate_tests(
+                problem=problem,
+                code=code,
+                function_name=contract["function_name"],
+                reference_tests=reference_tests,
+            )
+
+            print("\nRegenerated Tests:")
+            print(tests)
+
+            print(
+                "\n[Agent 3] Reviewing "
+                "regenerated tests..."
+            )
+
+            review = review_tests(
+                problem=problem,
+                code=code,
+                function_name=contract["function_name"],
+                reference_tests=reference_tests,
+                tests=tests,
+            )
+
+            review_status = review["verdict"]
+
+            print("\nSecond Review Verdict:")
+            print(review["verdict"])
+
+            print("\nSecond Review Details:")
+            print(review["response"])
+
+        except Exception as error:
+
+            review_status = "FAILED"
+
+            print(
+                f"\nReview/regeneration failed: "
+                f"{error}"
+            )
+
+    # --------------------------------------------------
+    # Persistence
+    # --------------------------------------------------
+
+    print(
+        "\n[Persistence] "
+        "Saving generated artifacts..."
+    )
 
     artifacts = save_generated_artifacts(
         task_id=task_id,
@@ -166,10 +286,23 @@ def run_pipeline(problem_data):
         tests=tests,
     )
 
-    print(f"Solution saved to: {artifacts['solution_file']}")
-    print(f"Tests saved to: {artifacts['test_file']}")
+    print(
+        f"Solution saved to: "
+        f"{artifacts['solution_file']}"
+    )
 
-    print("\n[Agent 3] Executing generated tests...")
+    print(
+        f"Tests saved to: "
+        f"{artifacts['test_file']}"
+    )
+
+    # --------------------------------------------------
+    # Agent 4 — Test Executor
+    # --------------------------------------------------
+
+    print(
+        "\n[Agent 4] Executing generated tests..."
+    )
 
     execution = execute_tests(
         code,
@@ -181,20 +314,28 @@ def run_pipeline(problem_data):
     )
 
     print("\nExecution Output:")
+
     print(
         execution["pytest_output"]
     )
 
     if execution["pytest_error"]:
+
         print("\nExecution Errors:")
+
         print(
             execution["pytest_error"]
         )
 
     print("\nCoverage:")
+
     print(
         execution["coverage_output"]
     )
+
+    # --------------------------------------------------
+    # Final Result
+    # --------------------------------------------------
 
     print("\nFinal Result:")
 
@@ -210,11 +351,18 @@ def run_pipeline(problem_data):
     )
 
     print(
-        f"Code Correctness: {code_correctness}"
+        f"Code Correctness: "
+        f"{code_correctness}"
     )
 
     print(
-        f"Test Execution:   {test_execution}"
+        f"Test Execution:   "
+        f"{test_execution}"
+    )
+
+    print(
+        f"Review Status:    "
+        f"{review_status}"
     )
 
     print(
@@ -238,13 +386,15 @@ def run_pipeline(problem_data):
     )
 
     return {
-    "task_id": task_id,
-    "function_name": contract["function_name"],
-    "code": code,
-    "tests": tests,
-    "reference": reference,
-    "result": result,
-    "artifacts": artifacts,
+        "task_id": task_id,
+        "function_name": contract["function_name"],
+        "code": code,
+        "tests": tests,
+        "reference": reference,
+        "review": review,
+        "review_status": review_status,
+        "result": result,
+        "artifacts": artifacts,
     }
 
 
@@ -258,7 +408,7 @@ def _coverage_text(value):
 
 if __name__ == "__main__":
 
-    dataset = load_dataset()
+    dataset = load_dataset()[:5]
 
     print(
         f"\nLoaded {len(dataset)} problems"
@@ -267,18 +417,37 @@ if __name__ == "__main__":
     results = []
 
     for problem_data in dataset:
-        problem_result = run_pipeline(problem_data)
 
-        results.append(problem_result)
+        problem_result = run_pipeline(
+            problem_data
+        )
 
-        save_problem_result(problem_result)
+        results.append(
+            problem_result
+        )
 
-    aggregate_files = save_all_results(results)
+        save_problem_result(
+            problem_result
+        )
+
+    aggregate_files = save_all_results(
+        results
+    )
 
     print("\nAggregate results saved:")
-    print(f"JSON: {aggregate_files['json_file']}")
-    print(f"CSV:  {aggregate_files['csv_file']}")
+
+    print(
+        f"JSON: "
+        f"{aggregate_files['json_file']}"
+    )
+
+    print(
+        f"CSV:  "
+        f"{aggregate_files['csv_file']}"
+    )
+
     print("\n")
+
     print("=" * 60)
     print("ALL PROBLEMS COMPLETED")
     print("=" * 60)
@@ -299,10 +468,12 @@ if __name__ == "__main__":
         )
 
         print(
-        f"Problem {item['task_id']}: "
-        f"Code Correctness={reference_text} | "
-        f"Test Execution="
-        f"{result.get('test_execution', 'N/A')} | "
-        f"Branch Coverage="
-        f"{_coverage_text(result.get('branch_coverage'))}"
-    )
+            f"Problem {item['task_id']}: "
+            f"Code Correctness={reference_text} | "
+            f"Review Status="
+            f"{item.get('review_status', 'N/A')} | "
+            f"Test Execution="
+            f"{result.get('test_execution', 'N/A')} | "
+            f"Branch Coverage="
+            f"{_coverage_text(result.get('branch_coverage'))}"
+        )

@@ -1,28 +1,27 @@
 from solution import remove_Occ
 
-def test_char_not_found():
-    assert remove_Occ("hello", "x") == "hello"
+def test_remove_Occ_char_falsy():
+    assert remove_Occ("hello", "") == "hello"
+    assert remove_Occ("hello", None) == "hello"
+
+def test_remove_Occ_char_not_found():
+    assert remove_Occ("hello", "z") == "hello"
     assert remove_Occ("", "a") == ""
-    assert remove_Occ("abc", "d") == "abc"
+    assert remove_Occ("xyz", "") == "xyz"
 
-def test_single_occurrence():
-    assert remove_Occ("abc", "b") == "ac"
-    assert remove_Occ("a", "a") == ""
-    assert remove_Occ("ba", "b") == "a"
-    assert remove_Occ("ab", "b") == "a"
+def test_remove_Occ_single_occurrence():
+    assert remove_Occ("abcd", "b") == "acd"
+    assert remove_Occ("hello", "h") == "ello"
+    assert remove_Occ("hello", "o") == "hell"
+    assert remove_Occ("x", "x") == ""
 
-def test_multiple_occurrences():
+def test_remove_Occ_two_occurrences():
     assert remove_Occ("hello", "l") == "heo"
     assert remove_Occ("abcda", "a") == "bcd"
-    assert remove_Occ("PHP", "P") == "H"
-    assert remove_Occ("abacada", "a") == "bacad"
-    assert remove_Occ("aaa", "a") == "a"
-    assert remove_Occ("aaaa", "a") == "aa"
+    assert remove_Occ("aa", "a") == ""
+    assert remove_Occ("aba", "a") == "b"
 
-def test_case_sensitivity():
-    assert remove_Occ("Hello", "h") == "Hello"
-    assert remove_Occ("Hello", "H") == "ello"
-
-def test_special_characters():
-    assert remove_Occ("a!b!c", "!") == "abc"
-    assert remove_Occ("  spaces  ", " ") == " spaces "
+def test_remove_Occ_multiple_occurrences():
+    assert remove_Occ("abaca", "a") == "bac"
+    assert remove_Occ("aaabaaa", "a") == "aabaa"
+    assert remove_Occ("aabbaa", "a") == "abba"

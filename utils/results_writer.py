@@ -9,10 +9,20 @@ RESULTS_DIR = Path("results")
 def save_problem_result(result):
     task_id = result["task_id"]
 
-    problem_dir = RESULTS_DIR / f"problem_{task_id}"
-    problem_dir.mkdir(parents=True, exist_ok=True)
+    problem_dir = (
+        RESULTS_DIR
+        / f"problem_{task_id}"
+    )
 
-    result_file = problem_dir / "result.json"
+    problem_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    result_file = (
+        problem_dir
+        / "result.json"
+    )
 
     result_file.write_text(
         json.dumps(
@@ -27,10 +37,25 @@ def save_problem_result(result):
 
 
 def save_all_results(results):
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    json_file = RESULTS_DIR / "results.json"
-    csv_file = RESULTS_DIR / "results.csv"
+    RESULTS_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    json_file = (
+        RESULTS_DIR
+        / "results.json"
+    )
+
+    csv_file = (
+        RESULTS_DIR
+        / "results.csv"
+    )
+
+    # --------------------------------------------------
+    # Save complete JSON results
+    # --------------------------------------------------
 
     json_file.write_text(
         json.dumps(
@@ -41,32 +66,107 @@ def save_all_results(results):
         encoding="utf-8",
     )
 
+    # --------------------------------------------------
+    # Prepare CSV rows
+    # --------------------------------------------------
+
     rows = []
 
     for item in results:
-        result = item.get("result") or {}
-        reference = item.get("reference") or {}
-        artifacts = item.get("artifacts") or {}
+
+        result = (
+            item.get("result")
+            or {}
+        )
+
+        reference = (
+            item.get("reference")
+            or {}
+        )
+
+        review = (
+            item.get("review")
+            or {}
+        )
+
+        artifacts = (
+            item.get("artifacts")
+            or {}
+        )
 
         rows.append({
-            "task_id": item.get("task_id"),
-            "function_name": item.get("function_name"),
-            "code_correct": reference.get("passed"),
-            "tests_passed": result.get("tests_passed"),
-            "tests_failed": result.get("tests_failed"),
-            "test_errors": result.get("test_errors"),
-            "branch_covered": result.get("branch_covered"),
-            "branch_total": result.get("branch_total"),
-            "branch_coverage": result.get("branch_coverage"),
-            "test_execution": result.get("test_execution"),
-            "solution_file": artifacts.get("solution_file"),
-            "test_file": artifacts.get("test_file"),
+            "task_id": item.get(
+                "task_id"
+            ),
+
+            "function_name": item.get(
+                "function_name"
+            ),
+
+            "code_correct": reference.get(
+                "passed"
+            ),
+
+            "review_status": item.get(
+                "review_status"
+            ),
+
+            "review_verdict": review.get(
+                "verdict"
+            ),
+
+            "review_approved": review.get(
+                "approved"
+            ),
+
+            "tests_passed": result.get(
+                "tests_passed"
+            ),
+
+            "tests_failed": result.get(
+                "tests_failed"
+            ),
+
+            "test_errors": result.get(
+                "test_errors"
+            ),
+
+            "branch_covered": result.get(
+                "branch_covered"
+            ),
+
+            "branch_total": result.get(
+                "branch_total"
+            ),
+
+            "branch_coverage": result.get(
+                "branch_coverage"
+            ),
+
+            "test_execution": result.get(
+                "test_execution"
+            ),
+
+            "solution_file": artifacts.get(
+                "solution_file"
+            ),
+
+            "test_file": artifacts.get(
+                "test_file"
+            ),
         })
+
+    # --------------------------------------------------
+    # CSV column order
+    # --------------------------------------------------
 
     fieldnames = [
         "task_id",
         "function_name",
         "code_correct",
+        "review_status",
+        "review_verdict",
+        "review_approved",
         "tests_passed",
         "tests_failed",
         "test_errors",
@@ -78,20 +178,30 @@ def save_all_results(results):
         "test_file",
     ]
 
+    # --------------------------------------------------
+    # Write CSV
+    # --------------------------------------------------
+
     with csv_file.open(
         "w",
         newline="",
         encoding="utf-8",
     ) as file:
+
         writer = csv.DictWriter(
             file,
             fieldnames=fieldnames,
         )
 
         writer.writeheader()
+
         writer.writerows(rows)
 
     return {
-        "json_file": str(json_file),
-        "csv_file": str(csv_file),
+        "json_file": str(
+            json_file
+        ),
+        "csv_file": str(
+            csv_file
+        ),
     }

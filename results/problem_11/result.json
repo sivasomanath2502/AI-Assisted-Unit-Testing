@@ -1,20 +1,27 @@
 {
     "task_id": 11,
     "function_name": "remove_Occ",
-    "code": "def remove_Occ(s, char):\n    first_idx = s.find(char)\n    if first_idx == -1:\n        return s\n    last_idx = s.rfind(char)\n    if first_idx == last_idx:\n        return s[:first_idx] + s[first_idx+1:]\n    return s[:first_idx] + s[first_idx+1:last_idx] + s[last_idx+1:]",
-    "tests": "from solution import remove_Occ\n\ndef test_char_not_found():\n    assert remove_Occ(\"hello\", \"x\") == \"hello\"\n    assert remove_Occ(\"\", \"a\") == \"\"\n    assert remove_Occ(\"abc\", \"d\") == \"abc\"\n\ndef test_single_occurrence():\n    assert remove_Occ(\"abc\", \"b\") == \"ac\"\n    assert remove_Occ(\"a\", \"a\") == \"\"\n    assert remove_Occ(\"ba\", \"b\") == \"a\"\n    assert remove_Occ(\"ab\", \"b\") == \"a\"\n\ndef test_multiple_occurrences():\n    assert remove_Occ(\"hello\", \"l\") == \"heo\"\n    assert remove_Occ(\"abcda\", \"a\") == \"bcd\"\n    assert remove_Occ(\"PHP\", \"P\") == \"H\"\n    assert remove_Occ(\"abacada\", \"a\") == \"bacad\"\n    assert remove_Occ(\"aaa\", \"a\") == \"a\"\n    assert remove_Occ(\"aaaa\", \"a\") == \"aa\"\n\ndef test_case_sensitivity():\n    assert remove_Occ(\"Hello\", \"h\") == \"Hello\"\n    assert remove_Occ(\"Hello\", \"H\") == \"ello\"\n\ndef test_special_characters():\n    assert remove_Occ(\"a!b!c\", \"!\") == \"abc\"\n    assert remove_Occ(\"  spaces  \", \" \") == \" spaces \"",
+    "code": "def remove_Occ(string, char):\n    if not char:\n        return string\n    \n    first = string.find(char)\n    if first == -1:\n        return string\n    \n    last = string.rfind(char)\n    \n    result = []\n    for i, c in enumerate(string):\n        if c == char and (i == first or i == last):\n            continue\n        result.append(c)\n    \n    return ''.join(result)",
+    "tests": "from solution import remove_Occ\n\ndef test_remove_Occ_char_falsy():\n    assert remove_Occ(\"hello\", \"\") == \"hello\"\n    assert remove_Occ(\"hello\", None) == \"hello\"\n\ndef test_remove_Occ_char_not_found():\n    assert remove_Occ(\"hello\", \"z\") == \"hello\"\n    assert remove_Occ(\"\", \"a\") == \"\"\n    assert remove_Occ(\"xyz\", \"\") == \"xyz\"\n\ndef test_remove_Occ_single_occurrence():\n    assert remove_Occ(\"abcd\", \"b\") == \"acd\"\n    assert remove_Occ(\"hello\", \"h\") == \"ello\"\n    assert remove_Occ(\"hello\", \"o\") == \"hell\"\n    assert remove_Occ(\"x\", \"x\") == \"\"\n\ndef test_remove_Occ_two_occurrences():\n    assert remove_Occ(\"hello\", \"l\") == \"heo\"\n    assert remove_Occ(\"abcda\", \"a\") == \"bcd\"\n    assert remove_Occ(\"aa\", \"a\") == \"\"\n    assert remove_Occ(\"aba\", \"a\") == \"b\"\n\ndef test_remove_Occ_multiple_occurrences():\n    assert remove_Occ(\"abaca\", \"a\") == \"bac\"\n    assert remove_Occ(\"aaabaaa\", \"a\") == \"aabaa\"\n    assert remove_Occ(\"aabbaa\", \"a\") == \"abba\"",
     "reference": {
         "passed": true,
         "return_code": 0,
         "stdout": "",
         "stderr": ""
     },
+    "review": {
+        "verdict": "APPROVE",
+        "response": "VERDICT: APPROVE\n\nREASONS:\n- Test oracles are consistent with the problem specification and reference examples (e.g., \"hello\"/\"l\" → \"heo\", \"abcda\"/\"a\" → \"bcd\", \"PHP\"/\"P\" → \"H\").\n- Behavioral coverage includes normal cases, boundary cases (empty string, single character, single occurrence, two occurrences, multiple occurrences), and edge cases (falsy char, char not found).\n- Branch coverage intent is addressed: tests exercise the falsy char branch, the not-found branch, and the normal removal path (including single vs. multiple occurrences).\n- No duplicate or redundant tests; each test function targets a distinct scenario.\n- Tests are valid pytest-style Python and import the target function correctly using `from solution import remove_Occ`.\n- No incorrect assumptions detected; expected values align with the specification rather than being derived solely from the implementation.",
+        "approved": true,
+        "attempts": 1
+    },
+    "review_status": "APPROVE",
     "result": {
         "tests_passed": 5,
         "tests_failed": 0,
         "test_errors": 0,
-        "branch_covered": 4,
-        "branch_total": 4,
+        "branch_covered": 8,
+        "branch_total": 8,
         "branch_coverage": 100.0,
         "test_execution": "PASS"
     },
