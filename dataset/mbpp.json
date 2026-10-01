@@ -1,0 +1,22 @@
+[
+    {
+        "task_id": 1,
+        "text": "Write a function to find the minimum cost path to reach (m, n) from (0, 0) for the given cost matrix cost[][] and a position (m, n) in cost[][]."
+    },
+    {
+        "task_id": 2,
+        "text": "Write a function to find the shared elements from the given two lists."
+    },
+    {
+        "task_id": 3,
+        "text": "Write a function to find the nth Fibonacci number."
+    },
+    {
+        "task_id": 4,
+        "text": "Write a function to find the factorial of a given number."
+    },
+    {
+        "task_id": 5,
+        "text": "Write a function to check whether a given number is a palindrome."
+    }
+]

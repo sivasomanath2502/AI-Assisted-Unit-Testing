@@ -1,41 +1,47 @@
+from pathlib import Path
+
 from llm_client import ask_llm
+from utils.artifact_validator import validate_code
 
 
-def generate_code(problem):
+PROMPT_FILE = Path(__file__).parent.parent / "prompts" / "code_generator_prompt.txt"
 
-    prompt = f"""
-You are a Python code generation agent.
+RETRY_PROMPT = """
+The previous response was not valid Python source code.
 
-Your task is to solve the given programming problem.
+Generate the solution again.
 
-Generate a correct Python implementation for the problem.
-
-Requirements:
-- Write a correct Python function that solves the problem.
-- Use clear and readable Python code.
-- Preserve necessary conditional logic required by the problem.
-- Do not replace meaningful algorithmic logic with shortcuts from built-in functions when doing so removes important decision logic.
-- Do not intentionally add unnecessary branches.
-- Do not provide explanations.
-- Do not use Markdown code fences.
-- Return only raw Python source code.
-- The first character of your response must be part of the Python code.
-- The generated code must be directly executable when saved as a .py file.
+STRICT OUTPUT RULE:
+Return ONLY executable Python source code.
+Do not include reasoning, analysis, safety messages, Markdown fences,
+explanations, or any text before or after the Python code.
+The response must contain at least one Python function.
 
 Problem:
 {problem}
 """
 
-    return ask_llm(prompt)
 
+def generate_code(problem):
+    prompt_template = PROMPT_FILE.read_text(encoding="utf-8")
+    prompt = prompt_template.format(problem=problem)
 
-if __name__ == "__main__":
+    last_error = None
 
-    problem = """
-Write a function that takes a list of integers
-and returns the largest element in the list.
-"""
+    for attempt in range(3):
+        current_prompt = prompt if attempt == 0 else RETRY_PROMPT.format(
+            problem=problem
+        )
 
-    code = generate_code(problem)
+        raw_code = ask_llm(current_prompt)
 
-    print(code)
+        is_valid, cleaned_code, error = validate_code(raw_code)
+
+        if is_valid:
+            return cleaned_code
+
+        last_error = error
+
+    raise ValueError(
+        f"CODE_GENERATION_FAILED after 3 attempts: {last_error}"
+    )

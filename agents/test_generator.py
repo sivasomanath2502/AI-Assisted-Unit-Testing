@@ -1,56 +1,55 @@
+from pathlib import Path
+
 from llm_client import ask_llm
+from utils.artifact_validator import validate_tests
 
 
-def generate_tests(code):
+PROMPT_FILE = Path(__file__).parent.parent / "prompts" / "test_generator_prompt.txt"
 
-    prompt = f"""
-You are a Python unit test generation agent.
+RETRY_PROMPT = """
+The previous response was not valid pytest source code.
 
-Your task is to generate unit tests for the given Python function.
+Generate the tests again for the Python function below.
+
+STRICT OUTPUT RULE:
+Return ONLY executable Python source code.
+The response MUST:
+- import pytest if pytest features are needed
+- import the target function from solution
+- contain at least one function whose name starts with test_
+- contain no reasoning, analysis, safety messages, Markdown fences,
+  explanations, or commentary
+- contain nothing before or after the Python code
 
 Testing objective:
-Achieve branch coverage.
-
-Requirements:
-- Identify every decision point in the code.
-- Generate tests that exercise both outcomes of every decision whenever possible.
-- Include normal cases.
-- Include boundary cases.
-- Include edge cases.
-- Write tests using pytest conventions.
-- Do not import the target function.
-- Assume the target function is already available in the same Python execution environment.
-- The tests must call the actual function defined in the provided code.
-- Do not modify the original function.
-- Do not provide explanations.
-- Do not use Markdown code fences.
-- Return only raw Python test source code.
-- The generated tests must be directly executable with pytest.
+Achieve branch coverage by exercising both outcomes of decisions
+whenever possible, including normal, boundary, and edge cases.
 
 Code to test:
-
 {code}
 """
 
-    return ask_llm(prompt)
 
+def generate_tests(code):
+    prompt_template = PROMPT_FILE.read_text(encoding="utf-8")
+    prompt = prompt_template.format(code=code)
 
-if __name__ == "__main__":
+    last_error = None
 
-    code = """
-def largest_element(lst):
-    if not lst:
-        return None
+    for attempt in range(3):
+        current_prompt = prompt if attempt == 0 else RETRY_PROMPT.format(
+            code=code
+        )
 
-    max_val = lst[0]
+        raw_tests = ask_llm(current_prompt)
 
-    for num in lst:
-        if num > max_val:
-            max_val = num
+        is_valid, cleaned_tests, error = validate_tests(raw_tests)
 
-    return max_val
-"""
+        if is_valid:
+            return cleaned_tests
 
-    tests = generate_tests(code)
+        last_error = error
 
-    print(tests)
+    raise ValueError(
+        f"TEST_GENERATION_FAILED after 3 attempts: {last_error}"
+    )

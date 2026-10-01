@@ -1,38 +1,47 @@
-import os
-
-from dotenv import load_dotenv
-from openai import OpenAI
+import requests
 
 
-load_dotenv()
+OLLAMA_URL = "http://localhost:11434/api/chat"
 
-api_key = os.getenv("OPENROUTER_API_KEY")
-
-client = OpenAI(
-    api_key=api_key,
-    base_url="https://openrouter.ai/api/v1"
-)
+MODEL = "qwen2.5-coder:7b"
 
 
 def ask_llm(prompt):
 
-    response = client.chat.completions.create(
-        model="openrouter/free",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
+    response = requests.post(
+        OLLAMA_URL,
+        json={
+            "model": MODEL,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a code generation component. "
+                        "Return only the requested Python source code. "
+                        "Do not provide explanations, reasoning, "
+                        "Markdown fences, or commentary."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "stream": False,
+            "options": {
+                "temperature": 0.1
             }
-        ]
+        },
+        timeout=120
     )
 
-    return response.choices[0].message.content
+    response.raise_for_status()
 
+    data = response.json()
 
-if __name__ == "__main__":
+    content = data["message"]["content"]
 
-    prompt = "Write a Python function that adds two numbers."
+    if not content:
+        raise RuntimeError("Ollama returned an empty response")
 
-    result = ask_llm(prompt)
-
-    print(result)
+    return content
