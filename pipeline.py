@@ -64,23 +64,144 @@ def run_pipeline(problem_data):
 
     print("\n[Agent 1] Generating code...")
 
-    try:
+    MAX_CODE_ATTEMPTS = 2
 
-        code = generate_code(
-            problem,
-            contract,
+    code = None
+    reference = None
+
+    for code_attempt in range(
+        1,
+        MAX_CODE_ATTEMPTS + 1,
+    ):
+
+        print(
+            f"\nCode generation attempt "
+            f"{code_attempt}/{MAX_CODE_ATTEMPTS}"
         )
 
-    except Exception as error:
+        try:
 
-        print(f"\n{error}")
+            code = generate_code(
+                problem,
+                contract,
+            )
+
+        except Exception as error:
+
+            print(
+                f"\nCode generation failed: "
+                f"{error}"
+            )
+
+            if code_attempt == MAX_CODE_ATTEMPTS:
+
+                return {
+                    "task_id": task_id,
+                    "function_name": contract[
+                        "function_name"
+                    ],
+                    "code": None,
+                    "tests": None,
+                    "reference": None,
+                    "review": None,
+                    "review_status": "NOT_RUN",
+                    "result": {
+                        "tests_passed": 0,
+                        "tests_failed": 0,
+                        "test_errors": 0,
+                        "branch_covered": 0,
+                        "branch_total": 0,
+                        "branch_coverage": None,
+                        "test_execution":
+                            "CODE_GENERATION_FAILED",
+                    },
+                    "artifacts": None,
+                }
+
+            continue
+
+        print("\nGenerated Code:")
+        print(code)
+
+        # --------------------------------------------------
+        # Reference Evaluation
+        # --------------------------------------------------
+
+        print(
+            "\n[Reference Evaluation] "
+            "Checking generated code..."
+        )
+
+        reference = evaluate_generated_code(
+            code,
+            problem_data,
+        )
+
+        print(
+            "Reference Code: "
+            + (
+                "PASS"
+                if reference["passed"]
+                else "FAIL"
+            )
+        )
+
+        if reference["stdout"]:
+            print(
+                reference["stdout"]
+            )
+
+        if reference["stderr"]:
+            print(
+                reference["stderr"]
+            )
+
+        # --------------------------------------------------
+        # Correct code → continue to Agent 2
+        # --------------------------------------------------
+
+        if reference["passed"]:
+
+            break
+
+        # --------------------------------------------------
+        # Incorrect code → regenerate
+        # --------------------------------------------------
+
+        if code_attempt < MAX_CODE_ATTEMPTS:
+
+            print(
+                "\n[Agent 1] Generated code "
+                "failed reference evaluation."
+            )
+
+            print(
+                "[Agent 1] Regenerating "
+                "the implementation..."
+            )
+
+        else:
+
+            print(
+                "\n[Agent 1] Code generation "
+                "failed reference evaluation "
+                "after all attempts."
+            )
+
+    # --------------------------------------------------
+    # Stop if final implementation is incorrect
+    # --------------------------------------------------
+
+    if reference is None or not reference["passed"]:
 
         return {
             "task_id": task_id,
-            "function_name": contract["function_name"],
-            "code": None,
+            "function_name": contract[
+                "function_name"
+            ],
+            "code": code,
             "tests": None,
-            "reference": None,
+            "reference": reference,
             "review": None,
             "review_status": "NOT_RUN",
             "result": {
@@ -90,42 +211,11 @@ def run_pipeline(problem_data):
                 "branch_covered": 0,
                 "branch_total": 0,
                 "branch_coverage": None,
-                "test_execution": "CODE_GENERATION_FAILED",
+                "test_execution":
+                    "CODE_CORRECTNESS_FAILED",
             },
             "artifacts": None,
         }
-
-    print("\nGenerated Code:")
-    print(code)
-
-    # --------------------------------------------------
-    # Reference Evaluation
-    # --------------------------------------------------
-
-    print(
-        "\n[Reference Evaluation] "
-        "Checking generated code..."
-    )
-
-    reference = evaluate_generated_code(
-        code,
-        problem_data,
-    )
-
-    print(
-        "Reference Code: "
-        + (
-            "PASS"
-            if reference["passed"]
-            else "FAIL"
-        )
-    )
-
-    if reference["stdout"]:
-        print(reference["stdout"])
-
-    if reference["stderr"]:
-        print(reference["stderr"])
 
     # --------------------------------------------------
     # Agent 2 — Test Generator
