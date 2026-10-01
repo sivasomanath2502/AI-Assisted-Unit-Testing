@@ -1,11 +1,16 @@
 def split_lowerstring(s):
     result = []
-    current = []
-    for ch in s:
-        if 'a' <= ch <= 'z':
-            result.append(''.join(current))
-            current = []
+    current = ""
+    started = False
+    for char in s:
+        if char.islower():
+            if current:
+                result.append(current)
+            current = char
+            started = True
         else:
-            current.append(ch)
-    result.append(''.join(current))
+            if started:
+                current += char
+    if current:
+        result.append(current)
     return result

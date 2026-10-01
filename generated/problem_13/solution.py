@@ -1,7 +1,5 @@
 def count_common(words):
-    if not words:
-        return 0
-    counts = {}
-    for word in words:
-        counts[word] = counts.get(word, 0) + 1
-    return max(counts.values())
+    from collections import Counter
+    counts = Counter(words)
+    sorted_items = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+    return sorted_items[:4]

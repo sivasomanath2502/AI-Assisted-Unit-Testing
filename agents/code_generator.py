@@ -11,10 +11,18 @@ PROMPT_FILE = (
 )
 
 
-def generate_code(problem, contract, max_attempts=3):
-
+def generate_code(
+    problem,
+    contract,
+    reference_tests,
+    max_attempts=2,
+):
     prompt_template = PROMPT_FILE.read_text(
         encoding="utf-8"
+    )
+
+    reference_examples = "\n".join(
+        reference_tests
     )
 
     base_prompt = prompt_template.format(
@@ -24,6 +32,7 @@ def generate_code(problem, contract, max_attempts=3):
         argument_types=", ".join(
             contract["argument_types"]
         ),
+        reference_tests=reference_examples,
     )
 
     prompt = base_prompt
@@ -46,20 +55,25 @@ def generate_code(problem, contract, max_attempts=3):
             return cleaned
 
         if attempt == max_attempts:
+
             raise RuntimeError(
-                f"CODE_GENERATION_FAILED: {error}"
+                f"CODE_GENERATION_FAILED: "
+                f"{error}"
             )
 
         prompt = (
             base_prompt
             + "\n\n"
-            + "Your previous response was rejected "
-            + "by the validator.\n"
+            "Your previous response was rejected "
+            "by the validator.\n"
             + f"Validation error: {error}\n"
+            + "\n"
+            "Regenerate the complete solution.\n"
             + (
-                "Regenerate the complete solution using "
-                f"the exact function name "
+                "Use the exact function name "
                 f"'{contract['function_name']}'.\n"
             )
-            + "Return only raw Python source code."
+            + (
+                "Return only raw Python source code."
+            )
         )

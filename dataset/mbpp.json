@@ -1,12 +1,302 @@
 [
-{"task_id":11,"text":"Write a python function to remove first and last occurrence of a given character from the string.","test_setup_code":"","test_list":["assert remove_Occ(\"hello\",\"l\") == \"heo\"","assert remove_Occ(\"abcda\",\"a\") == \"bcd\"","assert remove_Occ(\"PHP\",\"P\") == \"H\""]},
-{"task_id":12,"text":"Write a function to sort a given matrix in ascending order according to the sum of its rows.","test_setup_code":"","test_list":["assert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]])==[[1, 1, 1], [1, 2, 3], [2, 4, 5]]","assert sort_matrix([[1, 2, 3], [-2, 4, -5], [1, -1, 1]])==[[-2, 4, -5], [1, -1, 1], [1, 2, 3]]","assert sort_matrix([[5,8,9],[6,4,3],[2,1,4]])==[[2, 1, 4], [6, 4, 3], [5, 8, 9]]"]},
-{"task_id":13,"text":"Write a function to count the most common words in a dictionary.","test_setup_code":"","test_list":["assert count_common(['red','green','black','pink','black','white','black','eyes','white','black','orange','pink','pink','red','red','white','orange','white','black','pink','green','green','pink','green','pink','white','orange','orange','red']) == [('pink', 6), ('black', 5), ('white', 5), ('red', 4)]","assert count_common(['one', 'two', 'three', 'four', 'five', 'one', 'two', 'one', 'three', 'one']) == [('one', 4), ('two', 2), ('three', 2), ('four', 1)]","assert count_common(['Facebook', 'Apple', 'Amazon', 'Netflix', 'Google', 'Apple', 'Netflix', 'Amazon']) == [('Apple', 2), ('Amazon', 2), ('Netflix', 2), ('Facebook', 1)]"]},
-{"task_id":14,"text":"Write a python function to find the volume of a triangular prism.","test_setup_code":"","test_list":["assert find_Volume(10,8,6) == 240","assert find_Volume(3,2,2) == 6","assert find_Volume(1,2,1) == 1"]},
-{"task_id":15,"text":"Write a function to split a string at lowercase letters.","test_setup_code":"","test_list":["assert split_lowerstring(\"AbCd\")==[\"bC\",\"d\"]","assert split_lowerstring(\"Python\")==[\"y\", \"t\", \"h\", \"o\", \"n\"]","assert split_lowerstring(\"Programming\")==[\"r\", \"o\", \"g\", \"r\", \"a\", \"m\", \"m\", \"i\", \"n\", \"g\"]"]},
-{"task_id":16,"text":"Write a function to find sequences of lowercase letters joined with an underscore.","test_setup_code":"","test_list":["assert text_lowercase_underscore(\"aab_cbbbc\")==\"Found a match!\"","assert text_lowercase_underscore(\"aab_Abbbc\")==\"Not matched!\"","assert text_lowercase_underscore(\"Aaab_abbbc\")==\"Not matched!\""]},
-{"task_id":17,"text":"Write a function to find the perimeter of a square.","test_setup_code":"","test_list":["assert square_perimeter(10)==40","assert square_perimeter(5)==20","assert square_perimeter(4)==16"]},
-{"task_id":18,"text":"Write a function to remove characters from the first string which are present in the second string.","test_setup_code":"","test_list":["assert remove_dirty_chars(\"probasscurve\", \"pros\") == 'bacuve'","assert remove_dirty_chars(\"digitalindia\", \"talent\") == 'digiidi'","assert remove_dirty_chars(\"exoticmiles\", \"toxic\") == 'emles'"]},
-{"task_id":19,"text":"Write a function to find whether a given array of integers contains any duplicate element.","test_setup_code":"","test_list":["assert test_duplicate(([1,2,3,4,5]))==False","assert test_duplicate(([1,2,3,4, 4]))==True","assert test_duplicate([1,1,2,2,3,3,4,4,5])==True"]},
-{"task_id":20,"text":"Write a function to check if the given number is woodball or not.","test_setup_code":"","test_list":["assert is_woodall(383) == True","assert is_woodall(254) == False","assert is_woodall(200) == False"]}
+  {
+    "task_id": 11,
+    "text": "Write a python function to remove first and last occurrence of a given character from the string.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert remove_Occ(\"hello\",\"l\") == \"heo\"",
+      "assert remove_Occ(\"abcda\",\"a\") == \"bcd\"",
+      "assert remove_Occ(\"PHP\",\"P\") == \"H\""
+    ]
+  },
+  {
+    "task_id": 12,
+    "text": "Write a function to sort a given matrix in ascending order according to the sum of its rows.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]])==[[1, 1, 1], [1, 2, 3], [2, 4, 5]]",
+      "assert sort_matrix([[1, 2, 3], [-2, 4, -5], [1, -1, 1]])==[[-2, 4, -5], [1, -1, 1], [1, 2, 3]]",
+      "assert sort_matrix([[5,8,9],[6,4,3],[2,1,4]])==[[2, 1, 4], [6, 4, 3], [5, 8, 9]]"
+    ]
+  },
+  {
+    "task_id": 13,
+    "text": "Write a function to count the most common words in a dictionary.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert count_common(['red','green','black','pink','black','white','black','eyes','white','black','orange','pink','pink','red','red','white','orange','white','black','pink','green','green','pink','green','pink','white','orange','orange','red']) == [('pink', 6), ('black', 5), ('white', 5), ('red', 4)]",
+      "assert count_common(['one', 'two', 'three', 'four', 'five', 'one', 'two', 'one', 'three', 'one']) == [('one', 4), ('two', 2), ('three', 2), ('four', 1)]",
+      "assert count_common(['Facebook', 'Apple', 'Amazon', 'Netflix', 'Google', 'Apple', 'Netflix', 'Amazon']) == [('Apple', 2), ('Amazon', 2), ('Netflix', 2), ('Facebook', 1)]"
+    ]
+  },
+  {
+    "task_id": 14,
+    "text": "Write a python function to find the volume of a triangular prism.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert find_Volume(10,8,6) == 240",
+      "assert find_Volume(3,2,2) == 6",
+      "assert find_Volume(1,2,1) == 1"
+    ]
+  },
+  {
+    "task_id": 15,
+    "text": "Write a function to split a string at lowercase letters.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert split_lowerstring(\"AbCd\")==[\"bC\",\"d\"]",
+      "assert split_lowerstring(\"Python\")==[\"y\", \"t\", \"h\", \"o\", \"n\"]",
+      "assert split_lowerstring(\"Programming\")==[\"r\", \"o\", \"g\", \"r\", \"a\", \"m\", \"m\", \"i\", \"n\", \"g\"]"
+    ]
+  },
+  {
+    "task_id": 16,
+    "text": "Write a function to find sequences of lowercase letters joined with an underscore.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert text_lowercase_underscore(\"aab_cbbbc\")==\"Found a match!\"",
+      "assert text_lowercase_underscore(\"aab_Abbbc\")==\"Not matched!\"",
+      "assert text_lowercase_underscore(\"Aaab_abbbc\")==\"Not matched!\""
+    ]
+  },
+  {
+    "task_id": 17,
+    "text": "Write a function to find the perimeter of a square.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert square_perimeter(10)==40",
+      "assert square_perimeter(5)==20",
+      "assert square_perimeter(4)==16"
+    ]
+  },
+  {
+    "task_id": 18,
+    "text": "Write a function to remove characters from the first string which are present in the second string.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert remove_dirty_chars(\"probasscurve\", \"pros\") == 'bacuve'",
+      "assert remove_dirty_chars(\"digitalindia\", \"talent\") == 'digiidi'",
+      "assert remove_dirty_chars(\"exoticmiles\", \"toxic\") == 'emles'"
+    ]
+  },
+  {
+    "task_id": 19,
+    "text": "Write a function to find whether a given array of integers contains any duplicate element.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert test_duplicate(([1,2,3,4,5]))==False",
+      "assert test_duplicate(([1,2,3,4, 4]))==True",
+      "assert test_duplicate([1,1,2,2,3,3,4,4,5])==True"
+    ]
+  },
+  {
+    "task_id": 20,
+    "text": "Write a function to check if the given number is woodball or not.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert is_woodall(383) == True",
+      "assert is_woodall(254) == False",
+      "assert is_woodall(200) == False"
+    ]
+  },
+  {
+    "task_id": 21,
+    "text": "Write a function to find m number of multiples of n.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert multiples_of_num(4,3)== [3,6,9,12]",
+      "assert multiples_of_num(2,5)== [5,10]",
+      "assert multiples_of_num(9,2)== [2,4,6,8,10,12,14,16,18]"
+    ]
+  },
+  {
+    "task_id": 22,
+    "text": "Write a function to find the first duplicate element in a given array of integers.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert find_first_duplicate(([1, 2, 3, 4, 4, 5]))==4",
+      "assert find_first_duplicate([1, 2, 3, 4])==-1",
+      "assert find_first_duplicate([1, 1, 2, 3, 3, 2, 2])==1"
+    ]
+  },
+  {
+    "task_id": 23,
+    "text": "Write a python function to find the maximum sum of elements of list in a list of lists.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert maximum_Sum([[1,2,3],[4,5,6],[10,11,12],[7,8,9]]) == 33",
+      "assert maximum_Sum([[0,1,1],[1,1,2],[3,2,1]]) == 6",
+      "assert maximum_Sum([[0,1,3],[1,2,1],[9,8,2],[0,1,0],[6,4,8]]) == 19"
+    ]
+  },
+  {
+    "task_id": 24,
+    "text": "Write a function to convert the given binary number to its decimal equivalent.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert binary_to_decimal(100) == 4",
+      "assert binary_to_decimal(1011) == 11",
+      "assert binary_to_decimal(1101101) == 109"
+    ]
+  },
+  {
+    "task_id": 25,
+    "text": "Write a python function to find the product of non-repeated elements in a given array.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert find_Product([1,1,2,3],4) == 6",
+      "assert find_Product([1,2,3,1,1],5) == 6",
+      "assert find_Product([1,1,4,5,6],5) == 120"
+    ]
+  },
+  {
+    "task_id": 26,
+    "text": "Write a python function to check if the given tuple list has all k elements.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert check_k_elements([(4, 4), (4, 4, 4), (4, 4), (4, 4, 4, 4), (4, )], 4) == True",
+      "assert check_k_elements([(7, 7, 7), (7, 7)], 7) == True",
+      "assert check_k_elements([(9, 9), (9, 9, 9, 9)], 7) == False"
+    ]
+  },
+  {
+    "task_id": 27,
+    "text": "Write a python function to remove all digits from a list of strings.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert remove(['4words', '3letters', '4digits']) == ['words', 'letters', 'digits']",
+      "assert remove(['28Jan','12Jan','11Jan']) == ['Jan','Jan','Jan']",
+      "assert remove(['wonder1','wonder2','wonder3']) == ['wonder','wonder','wonder']"
+    ]
+  },
+  {
+    "task_id": 28,
+    "text": "Write a python function to find binomial co-efficient.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert binomial_Coeff(5,2) == 10",
+      "assert binomial_Coeff(4,3) == 4",
+      "assert binomial_Coeff(3,2) == 3"
+    ]
+  },
+  {
+    "task_id": 29,
+    "text": "Write a python function to find the element occurring odd number of times.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert get_Odd_Occurrence([1,2,3,1,2,3,1],7) == 1",
+      "assert get_Odd_Occurrence([1,2,3,2,3,1,3],7) == 3",
+      "assert get_Odd_Occurrence([2,3,5,4,5,2,4,3,5,2,4,4,2],13) == 5"
+    ]
+  },
+  {
+    "task_id": 30,
+    "text": "Write a python function to count all the substrings starting and ending with same characters.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert count_Substring_With_Equal_Ends(\"abc\") == 3",
+      "assert count_Substring_With_Equal_Ends(\"abcda\") == 6",
+      "assert count_Substring_With_Equal_Ends(\"ab\") == 2"
+    ]
+  },
+  {
+    "task_id": 31,
+    "text": "Write a function to find the top k integers that occur most frequently from given lists of sorted and distinct integers using heap queue algorithm.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert func([[1, 2, 6], [1, 3, 4, 5, 7, 8], [1, 3, 5, 6, 8, 9], [2, 5, 7, 11], [1, 4, 7, 8, 12]],3)==[5, 7, 1]",
+      "assert func([[1, 2, 6], [1, 3, 4, 5, 7, 8], [1, 3, 5, 6, 8, 9], [2, 5, 7, 11], [1, 4, 7, 8, 12]],1)==[1]",
+      "assert func([[1, 2, 6], [1, 3, 4, 5, 7, 8], [1, 3, 5, 6, 8, 9], [2, 5, 7, 11], [1, 4, 7, 8, 12]],5)==[6, 5, 7, 8, 1]"
+    ]
+  },
+  {
+    "task_id": 32,
+    "text": "Write a python function to find the largest prime factor of a given number.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert max_Prime_Factors(15) == 5",
+      "assert max_Prime_Factors(6) == 3",
+      "assert max_Prime_Factors(2) == 2"
+    ]
+  },
+  {
+    "task_id": 33,
+    "text": "Write a python function to convert a decimal number to binary number.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert decimal_To_Binary(10) == 1010",
+      "assert decimal_To_Binary(1) == 1",
+      "assert decimal_To_Binary(20) == 10100"
+    ]
+  },
+  {
+    "task_id": 34,
+    "text": "Write a python function to find the missing number in a sorted array.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert find_missing([1,2,3,5],4) == 4",
+      "assert find_missing([1,3,4,5],4) == 2",
+      "assert find_missing([1,2,3,5,6,7],5) == 4"
+    ]
+  },
+  {
+    "task_id": 35,
+    "text": "Write a function to find the n-th rectangular number.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert find_rect_num(4) == 20",
+      "assert find_rect_num(5) == 30",
+      "assert find_rect_num(6) == 42"
+    ]
+  },
+  {
+    "task_id": 36,
+    "text": "Write a python function to find the nth digit in the proper fraction of two given numbers.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert find_Nth_Digit(1,2,1) == 5",
+      "assert find_Nth_Digit(3,5,1) == 6",
+      "assert find_Nth_Digit(5,6,5) == 3"
+    ]
+  },
+  {
+    "task_id": 37,
+    "text": "Write a function to sort a given mixed list of integers and strings.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert sort_mixed_list([19,'red',12,'green','blue', 10,'white','green',1])==[1, 10, 12, 19, 'blue', 'green', 'green', 'red', 'white']",
+      "assert sort_mixed_list([19,'red',12,'green','blue', 10,'white','green',1])==[1, 10, 12, 19, 'blue', 'green', 'green', 'red', 'white']",
+      "assert sort_mixed_list([19,'red',12,'green','blue', 10,'white','green',1])==[1, 10, 12, 19, 'blue', 'green', 'green', 'red', 'white']"
+    ]
+  },
+  {
+    "task_id": 38,
+    "text": "Write a function to find the division of first even and odd number of a given list.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert div_even_odd([1,3,5,7,4,1,6,8])==4",
+      "assert div_even_odd([1,2,3,4,5,6,7,8,9,10])==2",
+      "assert div_even_odd([1,5,7,9,10])==10"
+    ]
+  },
+  {
+    "task_id": 39,
+    "text": "Write a function to check if the letters of a given string can be rearranged so that two characters that are adjacent to each other are different.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert rearange_string(\"aab\")=='aba'",
+      "assert rearange_string(\"aabb\")=='abab'",
+      "assert rearange_string(\"abccdd\")=='cdabcd'"
+    ]
+  },
+  {
+    "task_id": 40,
+    "text": "Write a function to find frequency of the elements in a given list of lists using collections module.",
+    "test_setup_code": "",
+    "test_list": [
+      "assert freq_element([[1, 2, 3, 2], [4, 5, 6, 2], [7, 1, 9, 5]])==({2: 3, 1: 2, 5: 2, 3: 1, 4: 1, 6: 1, 7: 1, 9: 1})",
+      "assert freq_element([[1,2,3,4],[5,6,7,8],[9,10,11,12]])==({1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1})",
+      "assert freq_element([[15,20,30,40],[80,90,100,110],[30,30,80,90]])==({30: 3, 80: 2, 90: 2, 15: 1, 20: 1, 40: 1, 100: 1, 110: 1})"
+    ]
+  }
 ]

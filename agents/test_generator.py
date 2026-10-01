@@ -16,7 +16,7 @@ def generate_tests(
     code,
     function_name,
     reference_tests,
-    max_attempts=3,
+    max_attempts=2,
 ):
     prompt_template = PROMPT_FILE.read_text(
         encoding="utf-8"

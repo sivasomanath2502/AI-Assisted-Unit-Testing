@@ -1,121 +1,107 @@
 from agents.code_generator import generate_code
 from agents.test_generator import generate_tests
 from agents.review_agent import review_tests
-from agents.test_executor import (
-    execute_tests,
-    parse_results,
-)
+from agents.test_executor import execute_tests
 
 from dataset_loader import load_dataset
+from reference_evaluator import evaluate_generated_code
 
-from reference_evaluator import (
-    evaluate_generated_code,
-)
-
-from utils.dataset_contract import (
-    infer_contract,
-)
-
-from utils.persistence import (
-    save_generated_artifacts,
-)
-
+from utils.dataset_contract import infer_contract
+from utils.persistence import save_generated_artifacts
 from utils.results_writer import (
     save_problem_result,
     save_all_results,
 )
 
 
-def run_pipeline(problem_data):
+# ---------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------
 
-    task_id = problem_data["task_id"]
-    problem = problem_data["text"]
+MAX_CODE_ATTEMPTS = 2
 
-    contract = infer_contract(problem_data)
+
+# ---------------------------------------------------------
+# Run Pipeline for One Problem
+# ---------------------------------------------------------
+
+def run_pipeline(problem):
+    task_id = problem["task_id"]
 
     print("=" * 60)
     print(f"PROCESSING PROBLEM {task_id}")
     print("=" * 60)
 
-    # --------------------------------------------------
+    # -----------------------------------------------------
     # Dataset Contract
-    # --------------------------------------------------
+    # -----------------------------------------------------
+
+    contract = infer_contract(problem)
+
+    function_name = contract["function_name"]
+
+    reference_tests = problem.get(
+        "test_list",
+        [],
+    )
 
     print("\n[Dataset Contract]")
+    print(f"Function: {contract['function_name']}")
+    print(f"Arguments: {contract['argument_count']}")
+    print(f"Types: {contract['argument_types']}")
 
-    print(
-        f"Function: "
-        f"{contract['function_name']}"
-    )
-
-    print(
-        f"Arguments: "
-        f"{contract['argument_count']}"
-    )
-
-    print(
-        f"Types: "
-        f"{contract['argument_types']}"
-    )
-
-    # --------------------------------------------------
-    # Agent 1 — Code Generator
-    # --------------------------------------------------
-
-    print("\n[Agent 1] Generating code...")
-
-    MAX_CODE_ATTEMPTS = 2
+    # -----------------------------------------------------
+    # Agent 1 - Code Generation
+    # -----------------------------------------------------
 
     code = None
-    reference = None
+    reference_result = None
+
+    print("\n[Agent 1] Generating code...")
 
     for code_attempt in range(
         1,
         MAX_CODE_ATTEMPTS + 1,
     ):
-
         print(
             f"\nCode generation attempt "
             f"{code_attempt}/{MAX_CODE_ATTEMPTS}"
         )
 
         try:
-
             code = generate_code(
-                problem,
-                contract,
+                problem=problem,
+                contract=contract,
+                reference_tests=reference_tests,
             )
 
         except Exception as error:
-
-            print(
-                f"\nCode generation failed: "
-                f"{error}"
-            )
+            print("\nCode generation failed:")
+            print(error)
 
             if code_attempt == MAX_CODE_ATTEMPTS:
-
                 return {
                     "task_id": task_id,
-                    "function_name": contract[
-                        "function_name"
-                    ],
+                    "function_name": function_name,
                     "code": None,
                     "tests": None,
-                    "reference": None,
+                    "reference": {
+                        "passed": False,
+                        "error": str(error),
+                    },
                     "review": None,
                     "review_status": "NOT_RUN",
                     "result": {
+                        "test_execution":
+                            "CODE_GENERATION_FAILED",
                         "tests_passed": 0,
                         "tests_failed": 0,
                         "test_errors": 0,
-                        "branch_covered": 0,
-                        "branch_total": 0,
+                        "branch_covered": None,
+                        "branch_total": None,
                         "branch_coverage": None,
-                        "test_execution":
-                            "CODE_GENERATION_FAILED",
                     },
-                    "artifacts": None,
+                    "artifacts": {},
                 }
 
             continue
@@ -123,164 +109,121 @@ def run_pipeline(problem_data):
         print("\nGenerated Code:")
         print(code)
 
-        # --------------------------------------------------
+        # -------------------------------------------------
         # Reference Evaluation
-        # --------------------------------------------------
+        # -------------------------------------------------
 
         print(
             "\n[Reference Evaluation] "
             "Checking generated code..."
         )
 
-        reference = evaluate_generated_code(
+        reference_result = evaluate_generated_code(
             code,
-            problem_data,
+            problem,
         )
 
-        print(
-            "Reference Code: "
-            + (
-                "PASS"
-                if reference["passed"]
-                else "FAIL"
-            )
-        )
-
-        if reference["stdout"]:
-            print(
-                reference["stdout"]
-            )
-
-        if reference["stderr"]:
-            print(
-                reference["stderr"]
-            )
-
-        # --------------------------------------------------
-        # Correct code → continue to Agent 2
-        # --------------------------------------------------
-
-        if reference["passed"]:
-
+        if reference_result["passed"]:
+            print("Reference Code: PASS")
             break
 
-        # --------------------------------------------------
-        # Incorrect code → regenerate
-        # --------------------------------------------------
+        print("Reference Code: FAIL")
+
+        if reference_result.get("stderr"):
+            print(reference_result["stderr"])
 
         if code_attempt < MAX_CODE_ATTEMPTS:
-
             print(
-                "\n[Agent 1] Generated code "
-                "failed reference evaluation."
+                "\nGenerated code failed the "
+                "reference tests."
             )
-
-            print(
-                "[Agent 1] Regenerating "
-                "the implementation..."
-            )
+            print("Regenerating code...")
 
         else:
-
             print(
-                "\n[Agent 1] Code generation "
-                "failed reference evaluation "
-                "after all attempts."
+                "\nCode correctness could not "
+                "be established."
             )
 
-    # --------------------------------------------------
-    # Stop if final implementation is incorrect
-    # --------------------------------------------------
+            return {
+                "task_id": task_id,
+                "function_name": function_name,
+                "code": code,
+                "tests": None,
+                "reference": reference_result,
+                "review": None,
+                "review_status": "NOT_RUN",
+                "result": {
+                    "test_execution":
+                        "CODE_CORRECTNESS_FAILED",
+                    "tests_passed": 0,
+                    "tests_failed": 0,
+                    "test_errors": 0,
+                    "branch_covered": None,
+                    "branch_total": None,
+                    "branch_coverage": None,
+                },
+                "artifacts": {},
+            }
 
-    if reference is None or not reference["passed"]:
-
-        return {
-            "task_id": task_id,
-            "function_name": contract[
-                "function_name"
-            ],
-            "code": code,
-            "tests": None,
-            "reference": reference,
-            "review": None,
-            "review_status": "NOT_RUN",
-            "result": {
-                "tests_passed": 0,
-                "tests_failed": 0,
-                "test_errors": 0,
-                "branch_covered": 0,
-                "branch_total": 0,
-                "branch_coverage": None,
-                "test_execution":
-                    "CODE_CORRECTNESS_FAILED",
-            },
-            "artifacts": None,
-        }
-
-    # --------------------------------------------------
-    # Agent 2 — Test Generator
-    # --------------------------------------------------
+    # -----------------------------------------------------
+    # Agent 2 - Test Generation
+    # -----------------------------------------------------
 
     print("\n[Agent 2] Generating tests...")
 
-    reference_tests = problem_data.get(
-        "test_list",
-        [],
-    )
-
     try:
-
         tests = generate_tests(
             problem=problem,
             code=code,
-            function_name=contract["function_name"],
+            function_name=function_name,
             reference_tests=reference_tests,
         )
 
-    except Exception as error:
+        print("\nGenerated Tests:")
+        print(tests)
 
-        print(f"\n{error}")
+    except Exception as error:
+        print("\nTest Generator failed:")
+        print(error)
 
         return {
             "task_id": task_id,
-            "function_name": contract["function_name"],
+            "function_name": function_name,
             "code": code,
             "tests": None,
-            "reference": reference,
+            "reference": reference_result,
             "review": None,
             "review_status": "NOT_RUN",
             "result": {
+                "test_execution":
+                    "TEST_GENERATION_FAILED",
                 "tests_passed": 0,
                 "tests_failed": 0,
                 "test_errors": 0,
-                "branch_covered": 0,
-                "branch_total": 0,
+                "branch_covered": None,
+                "branch_total": None,
                 "branch_coverage": None,
-                "test_execution": "TEST_GENERATION_FAILED",
             },
-            "artifacts": None,
+            "artifacts": {},
         }
 
-    print("\nGenerated Tests:")
-    print(tests)
-
-    # --------------------------------------------------
-    # Agent 3 — Review Agent
-    # --------------------------------------------------
+    # -----------------------------------------------------
+    # Agent 3 - Review Generated Tests
+    # -----------------------------------------------------
 
     print(
         "\n[Agent 3] Reviewing generated tests..."
     )
 
     review = None
-    review_status = "NOT_RUN"
+    review_status = "FAILED"
 
     try:
-
         review = review_tests(
             problem=problem,
             code=code,
-            function_name=contract["function_name"],
+            function_name=function_name,
             reference_tests=reference_tests,
             tests=tests,
         )
@@ -294,37 +237,58 @@ def run_pipeline(problem_data):
         print(review["response"])
 
     except Exception as error:
-
-        review_status = "FAILED"
+        print("\nReview Agent failed:")
+        print(error)
 
         print(
-            f"\nReview Agent failed: {error}"
+            "\n[Pipeline] Agent 4 execution skipped."
         )
 
-    # --------------------------------------------------
-    # One-Time Test Regeneration
-    # --------------------------------------------------
+        return {
+            "task_id": task_id,
+            "function_name": function_name,
+            "code": code,
+            "tests": tests,
+            "reference": reference_result,
+            "review": {
+                "verdict": None,
+                "approved": False,
+                "response": str(error),
+                "attempts": 0,
+            },
+            "review_status": "FAILED",
+            "result": {
+                "test_execution":
+                    "REVIEW_FAILED",
+                "tests_passed": 0,
+                "tests_failed": 0,
+                "test_errors": 0,
+                "branch_covered": None,
+                "branch_total": None,
+                "branch_coverage": None,
+            },
+            "artifacts": {},
+        }
 
-    if (
-        review is not None
-        and review["verdict"] == "REJECT"
-    ):
+    # -----------------------------------------------------
+    # Review Rejected
+    # Regenerate Tests Once
+    # -----------------------------------------------------
 
+    if review_status == "REJECT":
         print(
-            "\n[Agent 3] Review rejected "
-            "the generated tests."
+            "\n[Agent 3] Tests rejected."
         )
 
         print(
-            "[Agent 2] Regenerating tests once..."
+            "[Agent 2] Regenerating tests..."
         )
 
         try:
-
             tests = generate_tests(
                 problem=problem,
                 code=code,
-                function_name=contract["function_name"],
+                function_name=function_name,
                 reference_tests=reference_tests,
             )
 
@@ -332,14 +296,14 @@ def run_pipeline(problem_data):
             print(tests)
 
             print(
-                "\n[Agent 3] Reviewing "
-                "regenerated tests..."
+                "\n[Agent 3] "
+                "Reviewing regenerated tests..."
             )
 
             review = review_tests(
                 problem=problem,
                 code=code,
-                function_name=contract["function_name"],
+                function_name=function_name,
                 reference_tests=reference_tests,
                 tests=tests,
             )
@@ -353,17 +317,80 @@ def run_pipeline(problem_data):
             print(review["response"])
 
         except Exception as error:
-
-            review_status = "FAILED"
+            print(
+                "\nReview/regeneration failed:"
+            )
+            print(error)
 
             print(
-                f"\nReview/regeneration failed: "
-                f"{error}"
+                "\n[Pipeline] "
+                "Agent 4 execution skipped."
             )
 
-    # --------------------------------------------------
+            return {
+                "task_id": task_id,
+                "function_name": function_name,
+                "code": code,
+                "tests": tests,
+                "reference": reference_result,
+                "review": {
+                    "verdict": None,
+                    "approved": False,
+                    "response": str(error),
+                    "attempts": 0,
+                },
+                "review_status": "FAILED",
+                "result": {
+                    "test_execution":
+                        "REVIEW_FAILED",
+                    "tests_passed": 0,
+                    "tests_failed": 0,
+                    "test_errors": 0,
+                    "branch_covered": None,
+                    "branch_total": None,
+                    "branch_coverage": None,
+                },
+                "artifacts": {},
+            }
+
+    # -----------------------------------------------------
+    # Review Must Approve Before Execution
+    # -----------------------------------------------------
+
+    if review_status != "APPROVE":
+        print(
+            "\n[Pipeline] Tests were not "
+            "approved by the Review Agent."
+        )
+
+        print(
+            "[Pipeline] Agent 4 execution skipped."
+        )
+
+        return {
+            "task_id": task_id,
+            "function_name": function_name,
+            "code": code,
+            "tests": tests,
+            "reference": reference_result,
+            "review": review,
+            "review_status": review_status,
+            "result": {
+                "test_execution":
+                    "REVIEW_NOT_APPROVED",
+                "tests_passed": 0,
+                "tests_failed": 0,
+                "test_errors": 0,
+                "branch_covered": None,
+                "branch_total": None,
+                "branch_coverage": None,
+            },
+            "artifacts": {},
+        }
+
+    # -----------------------------------------------------
     # Persistence
-    # --------------------------------------------------
+    # -----------------------------------------------------
 
     print(
         "\n[Persistence] "
@@ -371,9 +398,9 @@ def run_pipeline(problem_data):
     )
 
     artifacts = save_generated_artifacts(
-        task_id=task_id,
-        code=code,
-        tests=tests,
+        task_id,
+        code,
+        tests,
     )
 
     print(
@@ -386,184 +413,129 @@ def run_pipeline(problem_data):
         f"{artifacts['test_file']}"
     )
 
-    # --------------------------------------------------
-    # Agent 4 — Test Executor
-    # --------------------------------------------------
+    # -----------------------------------------------------
+    # Agent 4 - Test Execution
+    # -----------------------------------------------------
 
     print(
         "\n[Agent 4] Executing generated tests..."
     )
 
-    execution = execute_tests(
+    execution_result = execute_tests(
         code,
         tests,
     )
 
-    result = parse_results(
-        execution
-    )
-
-    print("\nExecution Output:")
-
-    print(
-        execution["pytest_output"]
-    )
-
-    if execution["pytest_error"]:
-
-        print("\nExecution Errors:")
-
-        print(
-            execution["pytest_error"]
-        )
-
-    print("\nCoverage:")
-
-    print(
-        execution["coverage_output"]
-    )
-
-    # --------------------------------------------------
+    # -----------------------------------------------------
     # Final Result
-    # --------------------------------------------------
-
-    print("\nFinal Result:")
-
-    code_correctness = (
-        "PASS"
-        if reference["passed"]
-        else "FAIL"
-    )
-
-    test_execution = result.get(
-        "test_execution",
-        "UNKNOWN",
-    )
-
-    print(
-        f"Code Correctness: "
-        f"{code_correctness}"
-    )
-
-    print(
-        f"Test Execution:   "
-        f"{test_execution}"
-    )
-
-    print(
-        f"Review Status:    "
-        f"{review_status}"
-    )
-
-    print(
-        "Branch Coverage:  "
-        f"{_coverage_text(result.get('branch_coverage'))}"
-    )
-
-    print(
-        f"Tests Passed:     "
-        f"{result.get('tests_passed', 0)}"
-    )
-
-    print(
-        f"Tests Failed:     "
-        f"{result.get('tests_failed', 0)}"
-    )
-
-    print(
-        f"Test Errors:      "
-        f"{result.get('test_errors', 0)}"
-    )
+    # -----------------------------------------------------
 
     return {
         "task_id": task_id,
-        "function_name": contract["function_name"],
+        "function_name": function_name,
         "code": code,
         "tests": tests,
-        "reference": reference,
+        "reference": reference_result,
         "review": review,
         "review_status": review_status,
-        "result": result,
+        "result": execution_result,
         "artifacts": artifacts,
     }
 
 
-def _coverage_text(value):
+# ---------------------------------------------------------
+# Main - Full Dataset Evaluation
+# ---------------------------------------------------------
 
-    if value is None:
-        return "N/A"
+def main():
+    dataset = load_dataset()
 
-    return f"{value}%"
-
-
-if __name__ == "__main__":
-
-    dataset = load_dataset()[:5]
-
-    print(
-        f"\nLoaded {len(dataset)} problems"
-    )
+    # For development/testing:
+    # Change this to the desired number when running
+    # the complete evaluation.
+    dataset = dataset[:5]
 
     results = []
 
-    for problem_data in dataset:
+    for problem in dataset:
+        result = run_pipeline(problem)
 
-        problem_result = run_pipeline(
-            problem_data
+        results.append(result)
+
+        save_problem_result(result)
+
+        print("\n" + "=" * 60)
+        print(
+            f"Completed Problem "
+            f"{problem['task_id']}"
+        )
+        print("=" * 60)
+
+        reference = result.get("reference") or {}
+        execution = result.get("result") or {}
+
+        code_correctness = (
+            "PASS"
+            if reference.get("passed")
+            else "FAIL"
         )
 
-        results.append(
-            problem_result
+        print(
+            f"Code Correctness: "
+            f"{code_correctness}"
         )
 
-        save_problem_result(
-            problem_result
+        print(
+            f"Review Status: "
+            f"{result.get('review_status')}"
         )
+
+        print(
+            f"Test Execution: "
+            f"{execution.get('test_execution')}"
+        )
+
+        print(
+            f"Branch Coverage: "
+            f"{execution.get('branch_coverage')}"
+        )
+
+    # -----------------------------------------------------
+    # Aggregate Results
+    # -----------------------------------------------------
 
     aggregate_files = save_all_results(
         results
     )
 
-    print("\nAggregate results saved:")
-
-    print(
-        f"JSON: "
-        f"{aggregate_files['json_file']}"
-    )
-
-    print(
-        f"CSV:  "
-        f"{aggregate_files['csv_file']}"
-    )
-
-    print("\n")
-
-    print("=" * 60)
-    print("ALL PROBLEMS COMPLETED")
+    print("\n" + "=" * 60)
+    print("FINAL RESULTS")
     print("=" * 60)
 
     for item in results:
+        result = item.get("result") or {}
+        reference = item.get("reference") or {}
 
-        result = item["result"]
-        reference = item["reference"]
-
-        reference_text = (
-            "N/A"
-            if reference is None
-            else (
-                "PASS"
-                if reference["passed"]
-                else "FAIL"
-            )
+        code_correctness = (
+            "PASS"
+            if reference.get("passed")
+            else "FAIL"
         )
 
         print(
             f"Problem {item['task_id']}: "
-            f"Code Correctness={reference_text} | "
-            f"Review Status="
-            f"{item.get('review_status', 'N/A')} | "
+            f"Code Correctness={code_correctness} | "
+            f"Review Status={item.get('review_status')} | "
             f"Test Execution="
-            f"{result.get('test_execution', 'N/A')} | "
+            f"{result.get('test_execution')} | "
             f"Branch Coverage="
-            f"{_coverage_text(result.get('branch_coverage'))}"
+            f"{result.get('branch_coverage')}"
         )
+
+    print("\nResults saved to:")
+    print(aggregate_files["json_file"])
+    print(aggregate_files["csv_file"])
+
+
+if __name__ == "__main__":
+    main()

@@ -42,7 +42,7 @@ def review_tests(
     function_name,
     reference_tests,
     tests,
-    max_attempts=2,
+    max_attempts=1,
 ):
     prompt_template = PROMPT_FILE.read_text(
         encoding="utf-8"
