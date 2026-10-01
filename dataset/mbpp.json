@@ -1,22 +1,12 @@
 [
-    {
-        "task_id": 1,
-        "text": "Write a function to find the minimum cost path to reach (m, n) from (0, 0) for the given cost matrix cost[][] and a position (m, n) in cost[][]."
-    },
-    {
-        "task_id": 2,
-        "text": "Write a function to find the shared elements from the given two lists."
-    },
-    {
-        "task_id": 3,
-        "text": "Write a function to find the nth Fibonacci number."
-    },
-    {
-        "task_id": 4,
-        "text": "Write a function to find the factorial of a given number."
-    },
-    {
-        "task_id": 5,
-        "text": "Write a function to check whether a given number is a palindrome."
-    }
+{"task_id":11,"text":"Write a python function to remove first and last occurrence of a given character from the string.","test_setup_code":"","test_list":["assert remove_Occ(\"hello\",\"l\") == \"heo\"","assert remove_Occ(\"abcda\",\"a\") == \"bcd\"","assert remove_Occ(\"PHP\",\"P\") == \"H\""]},
+{"task_id":12,"text":"Write a function to sort a given matrix in ascending order according to the sum of its rows.","test_setup_code":"","test_list":["assert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]])==[[1, 1, 1], [1, 2, 3], [2, 4, 5]]","assert sort_matrix([[1, 2, 3], [-2, 4, -5], [1, -1, 1]])==[[-2, 4, -5], [1, -1, 1], [1, 2, 3]]","assert sort_matrix([[5,8,9],[6,4,3],[2,1,4]])==[[2, 1, 4], [6, 4, 3], [5, 8, 9]]"]},
+{"task_id":13,"text":"Write a function to count the most common words in a dictionary.","test_setup_code":"","test_list":["assert count_common(['red','green','black','pink','black','white','black','eyes','white','black','orange','pink','pink','red','red','white','orange','white','black','pink','green','green','pink','green','pink','white','orange','orange','red']) == [('pink', 6), ('black', 5), ('white', 5), ('red', 4)]","assert count_common(['one', 'two', 'three', 'four', 'five', 'one', 'two', 'one', 'three', 'one']) == [('one', 4), ('two', 2), ('three', 2), ('four', 1)]","assert count_common(['Facebook', 'Apple', 'Amazon', 'Netflix', 'Google', 'Apple', 'Netflix', 'Amazon']) == [('Apple', 2), ('Amazon', 2), ('Netflix', 2), ('Facebook', 1)]"]},
+{"task_id":14,"text":"Write a python function to find the volume of a triangular prism.","test_setup_code":"","test_list":["assert find_Volume(10,8,6) == 240","assert find_Volume(3,2,2) == 6","assert find_Volume(1,2,1) == 1"]},
+{"task_id":15,"text":"Write a function to split a string at lowercase letters.","test_setup_code":"","test_list":["assert split_lowerstring(\"AbCd\")==[\"bC\",\"d\"]","assert split_lowerstring(\"Python\")==[\"y\", \"t\", \"h\", \"o\", \"n\"]","assert split_lowerstring(\"Programming\")==[\"r\", \"o\", \"g\", \"r\", \"a\", \"m\", \"m\", \"i\", \"n\", \"g\"]"]},
+{"task_id":16,"text":"Write a function to find sequences of lowercase letters joined with an underscore.","test_setup_code":"","test_list":["assert text_lowercase_underscore(\"aab_cbbbc\")==\"Found a match!\"","assert text_lowercase_underscore(\"aab_Abbbc\")==\"Not matched!\"","assert text_lowercase_underscore(\"Aaab_abbbc\")==\"Not matched!\""]},
+{"task_id":17,"text":"Write a function to find the perimeter of a square.","test_setup_code":"","test_list":["assert square_perimeter(10)==40","assert square_perimeter(5)==20","assert square_perimeter(4)==16"]},
+{"task_id":18,"text":"Write a function to remove characters from the first string which are present in the second string.","test_setup_code":"","test_list":["assert remove_dirty_chars(\"probasscurve\", \"pros\") == 'bacuve'","assert remove_dirty_chars(\"digitalindia\", \"talent\") == 'digiidi'","assert remove_dirty_chars(\"exoticmiles\", \"toxic\") == 'emles'"]},
+{"task_id":19,"text":"Write a function to find whether a given array of integers contains any duplicate element.","test_setup_code":"","test_list":["assert test_duplicate(([1,2,3,4,5]))==False","assert test_duplicate(([1,2,3,4, 4]))==True","assert test_duplicate([1,1,2,2,3,3,4,4,5])==True"]},
+{"task_id":20,"text":"Write a function to check if the given number is woodball or not.","test_setup_code":"","test_list":["assert is_woodall(383) == True","assert is_woodall(254) == False","assert is_woodall(200) == False"]}
 ]

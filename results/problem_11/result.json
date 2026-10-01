@@ -1,0 +1,25 @@
+{
+    "task_id": 11,
+    "function_name": "remove_Occ",
+    "code": "def remove_Occ(s, char):\n    first_idx = s.find(char)\n    if first_idx == -1:\n        return s\n    last_idx = s.rfind(char)\n    if first_idx == last_idx:\n        return s[:first_idx] + s[first_idx+1:]\n    return s[:first_idx] + s[first_idx+1:last_idx] + s[last_idx+1:]",
+    "tests": "from solution import remove_Occ\n\ndef test_char_not_found():\n    assert remove_Occ(\"hello\", \"x\") == \"hello\"\n    assert remove_Occ(\"\", \"a\") == \"\"\n    assert remove_Occ(\"abc\", \"d\") == \"abc\"\n\ndef test_single_occurrence():\n    assert remove_Occ(\"abc\", \"b\") == \"ac\"\n    assert remove_Occ(\"a\", \"a\") == \"\"\n    assert remove_Occ(\"ba\", \"b\") == \"a\"\n    assert remove_Occ(\"ab\", \"b\") == \"a\"\n\ndef test_multiple_occurrences():\n    assert remove_Occ(\"hello\", \"l\") == \"heo\"\n    assert remove_Occ(\"abcda\", \"a\") == \"bcd\"\n    assert remove_Occ(\"PHP\", \"P\") == \"H\"\n    assert remove_Occ(\"abacada\", \"a\") == \"bacad\"\n    assert remove_Occ(\"aaa\", \"a\") == \"a\"\n    assert remove_Occ(\"aaaa\", \"a\") == \"aa\"\n\ndef test_case_sensitivity():\n    assert remove_Occ(\"Hello\", \"h\") == \"Hello\"\n    assert remove_Occ(\"Hello\", \"H\") == \"ello\"\n\ndef test_special_characters():\n    assert remove_Occ(\"a!b!c\", \"!\") == \"abc\"\n    assert remove_Occ(\"  spaces  \", \" \") == \" spaces \"",
+    "reference": {
+        "passed": true,
+        "return_code": 0,
+        "stdout": "",
+        "stderr": ""
+    },
+    "result": {
+        "tests_passed": 5,
+        "tests_failed": 0,
+        "test_errors": 0,
+        "branch_covered": 4,
+        "branch_total": 4,
+        "branch_coverage": 100.0,
+        "test_execution": "PASS"
+    },
+    "artifacts": {
+        "solution_file": "generated\\problem_11\\solution.py",
+        "test_file": "generated\\problem_11\\test_generated.py"
+    }
+}

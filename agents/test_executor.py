@@ -5,95 +5,186 @@ import tempfile
 from pathlib import Path
 
 
+def clean_generated_tests(tests):
+    tests = tests.strip()
+
+    if (
+        tests.startswith("```")
+        and tests.endswith("```")
+    ):
+        lines = tests.splitlines()
+
+        if len(lines) >= 2:
+            tests = "\n".join(
+                lines[1:-1]
+            ).strip()
+
+    return tests
+
+
 def execute_tests(code, tests):
+
     with tempfile.TemporaryDirectory() as temp_dir:
+
         temp_path = Path(temp_dir)
 
-        solution_file = temp_path / "solution.py"
-        test_file = temp_path / "test_generated.py"
+        solution_file = (
+            temp_path / "solution.py"
+        )
 
-        solution_file.write_text(code, encoding="utf-8")
-        test_file.write_text(tests, encoding="utf-8")
+        test_file = (
+            temp_path / "test_generated.py"
+        )
 
-        result = subprocess.run(
+        solution_file.write_text(
+            code,
+            encoding="utf-8",
+        )
+
+        test_file.write_text(
+            clean_generated_tests(tests),
+            encoding="utf-8",
+        )
+
+        try:
+
+            result = subprocess.run(
+                [
+                    "coverage",
+                    "run",
+                    "--branch",
+                    "--source=solution",
+                    "-m",
+                    "pytest",
+                    "test_generated.py",
+                ],
+                capture_output=True,
+                text=True,
+                cwd=temp_path,
+                timeout=60,
+            )
+
+        except subprocess.TimeoutExpired:
+
+            return {
+                "pytest_return_code": -1,
+                "pytest_output": "",
+                "pytest_error": (
+                    "Generated test execution timed out."
+                ),
+                "coverage_output": "",
+                "branch_covered": 0,
+                "branch_total": 0,
+                "branch_coverage": None,
+            }
+
+        coverage_result = subprocess.run(
             [
                 "coverage",
-                "run",
-                "--branch",
-                "--source=solution",
-                "-m",
-                "pytest",
-                "test_generated.py"
+                "report",
             ],
             capture_output=True,
             text=True,
-            cwd=temp_path
-        )
-
-        coverage_result = subprocess.run(
-            ["coverage", "report"],
-            capture_output=True,
-            text=True,
-            cwd=temp_path
+            cwd=temp_path,
         )
 
         json_result = subprocess.run(
-            ["coverage", "json"],
+            [
+                "coverage",
+                "json",
+            ],
             capture_output=True,
             text=True,
-            cwd=temp_path
+            cwd=temp_path,
         )
 
-        coverage_file = temp_path / "coverage.json"
-
-        base_result = {
-            "pytest_return_code": result.returncode,
-            "pytest_output": result.stdout,
-            "pytest_error": result.stderr,
-            "coverage_output": coverage_result.stdout,
-        }
+        coverage_file = (
+            temp_path / "coverage.json"
+        )
 
         if not coverage_file.exists():
+
             return {
-                **base_result,
+                "pytest_return_code": result.returncode,
+                "pytest_output": result.stdout,
+                "pytest_error": result.stderr,
+                "coverage_output": (
+                    coverage_result.stdout
+                ),
                 "branch_covered": 0,
                 "branch_total": 0,
-                "branch_coverage": 0.0,
-                "coverage_error": json_result.stderr,
+                "branch_coverage": None,
+                "coverage_error": (
+                    json_result.stderr
+                ),
             }
 
         coverage_data = json.loads(
-            coverage_file.read_text(encoding="utf-8")
+            coverage_file.read_text(
+                encoding="utf-8"
+            )
         )
 
         file_data = None
 
-        for filename, data in coverage_data.get("files", {}).items():
-            if filename.endswith("solution.py"):
+        for filename, data in coverage_data.get(
+            "files",
+            {},
+        ).items():
+
+            if filename.endswith(
+                "solution.py"
+            ):
                 file_data = data
                 break
 
         if file_data is None:
+
             return {
-                **base_result,
+                "pytest_return_code": result.returncode,
+                "pytest_output": result.stdout,
+                "pytest_error": result.stderr,
+                "coverage_output": (
+                    coverage_result.stdout
+                ),
                 "branch_covered": 0,
                 "branch_total": 0,
-                "branch_coverage": 0.0,
-                "coverage_error": "solution.py not found in coverage report",
+                "branch_coverage": None,
+                "coverage_error": (
+                    "solution.py not found "
+                    "in coverage report"
+                ),
             }
 
         summary = file_data["summary"]
 
-        branch_total = summary.get("num_branches", 0)
-        branch_covered = summary.get("covered_branches", 0)
+        branch_total = summary.get(
+            "num_branches",
+            0,
+        )
+
+        branch_covered = summary.get(
+            "covered_branches",
+            0,
+        )
 
         if branch_total == 0:
-            branch_coverage = 100.0
+            branch_coverage = None
         else:
-            branch_coverage = (branch_covered / branch_total) * 100
+            branch_coverage = (
+                branch_covered
+                / branch_total
+            ) * 100
 
         return {
-            **base_result,
+            "pytest_return_code": (
+                result.returncode
+            ),
+            "pytest_output": result.stdout,
+            "pytest_error": result.stderr,
+            "coverage_output": (
+                coverage_result.stdout
+            ),
             "branch_covered": branch_covered,
             "branch_total": branch_total,
             "branch_coverage": branch_coverage,
@@ -101,20 +192,41 @@ def execute_tests(code, tests):
 
 
 def parse_results(result):
-    pytest_output = result["pytest_output"]
 
-    passed_match = re.search(r"(\d+)\s+passed", pytest_output)
-    failed_match = re.search(r"(\d+)\s+failed", pytest_output)
-    error_match = re.search(r"(\d+)\s+error", pytest_output)
+    output = result["pytest_output"]
 
-    tests_passed = int(passed_match.group(1)) if passed_match else 0
-    tests_failed = int(failed_match.group(1)) if failed_match else 0
-    test_errors = int(error_match.group(1)) if error_match else 0
+    passed_match = re.search(
+        r"(\d+)\s+passed",
+        output,
+    )
 
-    if result["pytest_return_code"] == 0:
-        verdict = "PASS"
-    else:
-        verdict = "FAIL"
+    failed_match = re.search(
+        r"(\d+)\s+failed",
+        output,
+    )
+
+    error_match = re.search(
+        r"(\d+)\s+errors?",
+        output,
+    )
+
+    tests_passed = (
+        int(passed_match.group(1))
+        if passed_match
+        else 0
+    )
+
+    tests_failed = (
+        int(failed_match.group(1))
+        if failed_match
+        else 0
+    )
+
+    test_errors = (
+        int(error_match.group(1))
+        if error_match
+        else 0
+    )
 
     return {
         "tests_passed": tests_passed,
@@ -122,6 +234,14 @@ def parse_results(result):
         "test_errors": test_errors,
         "branch_covered": result["branch_covered"],
         "branch_total": result["branch_total"],
-        "branch_coverage": round(result["branch_coverage"], 2),
-        "verdict": verdict,
+        "branch_coverage": (
+            None
+            if result["branch_coverage"] is None
+            else round(result["branch_coverage"], 2)
+        ),
+        "test_execution": (
+            "PASS"
+            if result["pytest_return_code"] == 0
+            else "FAIL"
+        ),
     }

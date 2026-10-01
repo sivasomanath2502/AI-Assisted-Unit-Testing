@@ -1,5 +1,4 @@
 import ast
-import re
 
 
 def _remove_code_fences(text):
@@ -9,8 +8,7 @@ def _remove_code_fences(text):
         lines = text.splitlines()
 
         if len(lines) >= 2:
-            lines = lines[1:-1]
-            text = "\n".join(lines).strip()
+            text = "\n".join(lines[1:-1]).strip()
 
     return text
 
@@ -18,7 +16,7 @@ def _remove_code_fences(text):
 def _contains_reasoning(text):
     lowered = text.lower()
 
-    forbidden_markers = [
+    forbidden = [
         "<think>",
         "</think>",
         "user safety:",
@@ -28,66 +26,158 @@ def _contains_reasoning(text):
         "sure, here",
     ]
 
-    return any(marker in lowered for marker in forbidden_markers)
+    return any(
+        marker in lowered
+        for marker in forbidden
+    )
 
 
-def validate_code(code):
+def validate_code(code, required_function_name=None):
     cleaned = _remove_code_fences(code)
 
     if not cleaned:
         return False, cleaned, "empty response"
 
     if _contains_reasoning(cleaned):
-        return False, cleaned, "LLM returned non-code/reasoning content"
+        return (
+            False,
+            cleaned,
+            "LLM returned non-code/reasoning content",
+        )
 
     try:
         tree = ast.parse(cleaned)
+
     except SyntaxError as error:
-        return False, cleaned, f"invalid Python syntax: {error}"
+        return (
+            False,
+            cleaned,
+            f"invalid Python syntax: {error}",
+        )
 
     functions = [
-        node for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        node
+        for node in ast.walk(tree)
+        if isinstance(
+            node,
+            (
+                ast.FunctionDef,
+                ast.AsyncFunctionDef,
+            ),
+        )
     ]
 
     if not functions:
-        return False, cleaned, "no Python function was generated"
+        return (
+            False,
+            cleaned,
+            "no Python function was generated",
+        )
+
+    if required_function_name:
+        names = {
+            node.name
+            for node in functions
+        }
+
+        if required_function_name not in names:
+            return (
+                False,
+                cleaned,
+                (
+                    f"required function "
+                    f"'{required_function_name}' "
+                    f"was not generated"
+                ),
+            )
 
     return True, cleaned, None
 
 
-def validate_tests(tests):
+def validate_tests(tests, required_function_name=None):
     cleaned = _remove_code_fences(tests)
 
     if not cleaned:
         return False, cleaned, "empty response"
 
     if _contains_reasoning(cleaned):
-        return False, cleaned, "LLM returned non-test/reasoning content"
+        return (
+            False,
+            cleaned,
+            "LLM returned non-test/reasoning content",
+        )
 
     try:
         tree = ast.parse(cleaned)
+
     except SyntaxError as error:
-        return False, cleaned, f"invalid Python syntax: {error}"
+        return (
+            False,
+            cleaned,
+            f"invalid Python syntax: {error}",
+        )
 
     test_functions = [
-        node for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef)
-        and node.name.startswith("test_")
+        node
+        for node in ast.walk(tree)
+        if (
+            isinstance(node, ast.FunctionDef)
+            and node.name.startswith("test_")
+        )
     ]
 
     if not test_functions:
-        return False, cleaned, "no pytest test functions were generated"
+        return (
+            False,
+            cleaned,
+            "no pytest test functions were generated",
+        )
 
-    imports_solution = False
+    imported_names = set()
 
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom):
-            if node.module == "solution":
-                imports_solution = True
-                break
+        if (
+            isinstance(node, ast.ImportFrom)
+            and node.module == "solution"
+        ):
+            for alias in node.names:
+                imported_names.add(alias.name)
 
-    if not imports_solution:
-        return False, cleaned, "tests do not import the target from solution"
+                if (
+                    required_function_name
+                    and alias.name == required_function_name
+                    and required_function_name.startswith("test_")
+                    and alias.asname is None
+                ):
+                    return (
+                        False,
+                        cleaned,
+                        (
+                            f"target function "
+                            f"'{required_function_name}' "
+                            f"must be imported using an alias "
+                            f"because its name starts with 'test_'"
+                        ),
+                    )
+
+    if not imported_names:
+        return (
+            False,
+            cleaned,
+            "tests do not import the target from solution",
+        )
+
+    if (
+        required_function_name
+        and required_function_name not in imported_names
+    ):
+        return (
+            False,
+            cleaned,
+            (
+                f"tests do not import required function "
+                f"'{required_function_name}'"
+            ),
+        )
 
     return True, cleaned, None
